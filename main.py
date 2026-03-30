@@ -6,9 +6,20 @@ from langchain.tools import tool
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import AzureChatOpenAI
 from langchain_tavily import TavilySearch
+from typing import List
+from pydantic import BaseModel, Field
 
 load_dotenv()  # Load environment variables from .env file 
 tavily = TavilyClient()
+
+class Source(BaseModel):
+    """Represents a source of information."""
+    url: str = Field(description="The URL of the source")
+
+class AgentResponse(BaseModel):
+    """Represents the response from the agent."""
+    answer: str = Field(description="The answer provided by the agent")
+    sources: List[Source] = Field(default_factory=list, description="List of sources used to generate the answer")
 
 @tool
 def search(query:str) -> str:
@@ -32,7 +43,7 @@ llm = AzureChatOpenAI(
 
 # tools = [search]
 tools = [TavilySearch()]
-agent = create_agent(model=llm, tools=tools)
+agent = create_agent(model=llm, tools=tools, response_format=AgentResponse)
 
 def main():
     print("Hello from langchain-course!")
